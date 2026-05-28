@@ -1,60 +1,120 @@
-Distributed Classification on the Iris Dataset using PySpark MLlib
+PySpark MLlib Iris Classification Project (STQD6324 Data Management)
 
-This repository contains the complete implementation of a distributed machine learning pipeline to classify botanical species of the Iris dataset using PySpark MLlib. The project is submitted for the STQD6324 Data Management course (Assignment 1, Semester 2 2025/2026).
+This repository contains the first assignment for the STQD6324 Data Management course at the National University of Malaysia (UKM). The project implements a distributed feature engineering and classification pipeline using PySpark MLlib on the classic Iris dataset, comparing the performance of three different algorithms after hyperparameter tuning.
 
-📌 Project Overview
+Workflow
 
-The primary objective of this project is to develop and compare three distributed machine learning classifiers utilizing Apache Spark's MLlib. The pipeline encapsulates the entire machine learning lifecycle, including:
+Apache Spark operates on a lazy-evaluation paradigm; thus, our implementation focuses on constructing an end-to-end Machine Learning Pipeline. The data flow of this project is illustrated below:
 
-Robust programmatic ingestion of public web data.
+  +-----------------------------------------------------------------------+
+  |                           Data Ingestion & Schema Definition          |
+  |     Online ingestion from UCI ML Repository -> Pandas -> Spark DataFrame|
+  +-----------------------------------------------------------------------+
+                                      |
+                                      v
+  +-----------------------------------------------------------------------+
+  |                          Spark ML Feature Engineering                 |
+  |  [Text Labels]  --->  StringIndexer   --->  [Numeric Index 0.0/1.0/2.0]|
+  |  [Raw Features] --->  VectorAssembler  --->  [Dense Vector "features"] |
+  +-----------------------------------------------------------------------+
+                                      |
+                                      v
+  +-----------------------------------------------------------------------+
+  |                              Dataset Partitioning                     |
+  |                 75% Training Split   |   25% Testing Split            |
+  +-----------------------------------------------------------------------+
+                        |                             |
+                        v                             v
+  +--------------------------------------------+  +-----------------------+
+  |              Parallel Grid Tuning & Evaluation |  |                       |
+  |  - ParamGridBuilder (Hyperparameter Grid)  |  |   Out-of-Sample Test  |
+  |  - CrossValidator (3-fold Cross Validation)|  |       Predictions     |
+  |  - MulticlassClassificationEvaluator       |  |                       |
+  +--------------------------------------------+  +-----------------------+
+                        |                             |
+                        +------------->---------------+
+                                      |
+                                      v
+  +-----------------------------------------------------------------------+
+  |                             Metrics & Visualization                   |
+  |       Compute & print Accuracy, F1-Score, Precision, and Recall       |
+  +-----------------------------------------------------------------------+
 
-Structured distributed feature engineering and data transformation.
 
-Systematized hyperparameter tuning via grid search and 3-fold cross-validation.
-
-Comprehensive performance evaluation contrasting parametric and non-parametric algorithms.
-
-📊 Dataset & Preprocessing Methodology
+Data Preparation & Preprocessing
 
 1. Dataset Description
 
-The model is trained on the classic Iris Flower Dataset obtained from the UCI Machine Learning Repository. It comprises 150 samples across 3 classes (50 samples each):
+The dataset is programmatically fetched online from the UCI Machine Learning Repository, containing a total of 150 instances.
+The physical dimensions of sepals and petals (4 features in total) serve as the model input vector:
 
-Iris setosa
 
-Iris versicolor
+$$\mathbf{x} = [\text{sepal\_length}, \text{sepal\_width}, \text{petal\_length}, \text{petal\_width}]^T$$
 
-Iris virginica
 
-Each sample possesses 4 physical features: sepal_length, sepal_width, petal_length, and petal_width.
+The target variable is the flower species: Setosa (linearly separable), Versicolor, and Virginica (the latter two have partially overlapping feature distributions).
 
-2. Preprocessing & Distributed Pipeline
+2. Preprocessing Steps
 
-To feed the data into Spark's distributed estimators, the following workflow is engineered:
+StringIndexer: Converts categorical string labels (e.g., Iris-setosa) into numerical indices [0.0, 1.0, 2.0].
 
-Label Encoding (StringIndexer): Transforms the textual botanical category labels into index floats (0.0, 1.0, 2.0).
+VectorAssembler: Combines the 4 independent feature columns into a single dense vector column named "features" (a strict prerequisite for Spark MLlib model training).
 
-Feature Assembly (VectorAssembler): Consolidates the four numeric feature columns into a single Spark dense vector column named "features".
+Dataset Partitioning: The data is partitioned into a 75% training split and a 25% testing split with a fixed random seed (seed=42). The split yields exactly 112 training samples and 38 testing samples, ensuring full reproducibility across executions.
 
-Dataset Partitioning: The assembled dataset is split into 75% training (for model training and cross-validation) and 25% testing (for out-of-sample evaluation) using a fixed random seed of 42 to guarantee complete reproducibility.
+Model Tuning & Parameter Grid
 
-⚙️ Model Tuning & Optimization
+To discover the optimal configuration and prevent models from overfitting on the training partition, we leveraged CrossValidator to perform 3-fold cross-validation combined with a grid search (ParamGridBuilder):
 
-Three machine learning estimators are constructed, tuned, and evaluated:
+Model
 
-Logistic Regression (LR): Tuned over regularization parameter regParam [0.01, 0.1, 1.0] and ElasticNet mixing parameter elasticNetParam [0.0, 0.5, 1.0].
+Core Mechanism
 
-Decision Tree (DT): Tuned over tree depth maxDepth [3, 5, 7] and continuous feature binning resolution maxBins [10, 20].
+Hyperparameter Grid
 
-Random Forest (RF): Tuned over tree counts numTrees [10, 20, 50] and tree depth maxDepth [3, 5].
+Optimal Configuration
 
-All classifiers are optimized using a 3-fold Stratified Cross-Validation (CrossValidator) scheme.
+Logistic Regression (LR)
 
-📈 Summary of Results & Key Findings
+Parametric model searching for the optimal linear decision hyperplane.
 
-1. Empirical Metrics On Testing Partition
+regParam: [0.01, 0.1, 1.0] (L2 Regularisation)elasticNetParam: [0.0, 0.5, 1.0] (L1/L2 ratio)
 
-The optimized configurations converged to identical outstanding classification scores on the independent test dataset:
+regParam=0.01
+
+
+
+elasticNetParam=0.0
+
+Decision Tree (DT)
+
+Non-parametric model recursively splitting feature space based on Information Gain.
+
+maxDepth: [3, 5, 7] (Tree depth limit)maxBins: [10, 20] (Continuous feature binning)
+
+maxDepth=5
+
+
+
+maxBins=20
+
+Random Forest (RF)
+
+Ensemble method training multiple decorrelated trees via Bootstrap Aggregating (Bagging).
+
+numTrees: [10, 20, 50] (Ensemble tree count)maxDepth: [3, 5] (Maximum subtree depth)
+
+numTrees=10
+
+
+
+maxDepth=5
+
+Test Partition Results & Discussion
+
+1. Test Performance Metrics ($N=38$)
+
+Following parameter tuning, the evaluations on the 25% independent test partition converged to the following results:
 
 Model Classifier
 
@@ -66,7 +126,9 @@ Weighted Precision
 
 Weighted Recall
 
-Random Forest
+Correct Classifications
+
+Random Forest (RF)
 
 0.9211
 
@@ -76,7 +138,9 @@ Random Forest
 
 0.9211
 
-Logistic Regression
+35 / 38
+
+Logistic Regression (LR)
 
 0.9211
 
@@ -86,7 +150,9 @@ Logistic Regression
 
 0.9211
 
-Decision Tree
+35 / 38
+
+Decision Tree (DT)
 
 0.9211
 
@@ -96,49 +162,31 @@ Decision Tree
 
 0.9211
 
-2. Analytical Discussion & Insights
+35 / 38
 
-The Majority-Class Trap Avoided: F1-Scores (0.9224) closely tracking and slightly exceeding the accuracy confirm that the classifiers did not fall into any class imbalances, proving the high quality of the 75%/25% data split.
+2. Empirical Performance Discussion
 
-Why Random Forest is Recommended: Despite the numerical tie across all three models due to the high linear separability of the small dataset, Random Forest is chosen as the optimal choice. It provides exceptional variance control through Bootstrap Aggregating (Bagging) and implicit regularization from its optimal hyperparameters (numTrees=10, maxDepth=5), preventing overfitting to localized noise.
+Why do all three models yield identical metrics?
 
-🚀 How to Reproduce the Analysis
-
-Follow these steps to run the pipeline locally or on a distributed Spark cluster.
-
-Prerequisites
-
-Make sure your system has Java Development Kit (JDK 8 or 11) installed and configured in your environment path.
-
-1. Clone the Repository
-
-git clone [https://github.com/your-username/your-repo-name.git](https://github.com/your-username/your-repo-name.git)
-cd your-repo-name
+You will notice that all three classifiers—despite having completely different mathematical foundations—produced the exact same Accuracy of 0.9211.
+This is because our test split contains exactly 38 samples:
 
 
-2. Set Up Virtual Environment (Optional but Recommended)
-
-python -m venv venv
-source venv/bin/activate  # On Windows use: venv\Scripts\activate
+$$\text{Accuracy} = \frac{35}{38} \approx 0.921052 \approx \mathbf{0.9211}$$
 
 
-3. Install Dependencies
+This mathematical breakdown reveals that every single model misclassified exactly 3 samples out of the 38 test samples. Given the small size of the Iris dataset, different algorithms (whether parametric linear boundaries or non-parametric recursive partitions) easily reach an empirical performance ceiling. The 3 misclassified samples are borderline cases located where Versicolor and Virginica overlap in physical space, making them naturally hard to separate.
 
-Install PySpark and other visualization utilities listed in the runtime requirements:
+F1-Score and Accuracy Correspondence
 
-pip install pyspark pandas matplotlib seaborn
+Our weighted F1-Score of 0.9224 closely tracks the raw accuracy of 0.9211. In multi-class classification, if a model suffers from class bias (e.g., the majority-class bias trap), the F1-score typically drops significantly below accuracy. The tight alignment confirms that our 75%/25% split was highly balanced, avoiding class skewness or generalisation failure.
 
+Which model should we choose?
 
-4. Execute the Pipeline
+Although the test performance is numerically identical, for deployment in a distributed production environment, Random Forest (RF) remains our primary choice:
 
-You can run the notebook using Jupyter:
+Logistic Regression is a parametric linear model assuming a flat, rigid decision boundary. When faced with complex non-linear perturbations or noisy data in real-world environments, a purely linear model will suffer from high systematic bias (underfitting).
 
-jupyter notebook
+Decision Tree is highly sensitive to minor variations in the training dataset, suffering from high variance. This makes standalone tree models structurally unstable on different data splits.
 
-
-Open Data Management Assignment 1.ipynb and execute all cells sequentially (Cell -> Run All).
-
-📂 Repository Structure
-
-├── README.md                           <- This project summary and deployment documentation
-└── Data Management Assignment 1.ipynb <- Complete PySpark implementation and performance plots
+Random Forest utilises a Bagging mechanism to ensemble 10 decorrelated subtrees. By aggregating predictions, it drastically minimises the overall model variance. Furthermore, the optimal parameters chosen via our grid search (numTrees=10, maxDepth=5) act as effective implicit pruning and regularisation. Thus, Random Forest provides far superior robustness and generalisation safety.
