@@ -193,20 +193,20 @@ Random Forest utilises a Bagging mechanism to ensemble 10 decorrelated subtrees.
 
 ```mermaid
 graph TD
-    %% 节点定义：极致精简，拒绝任何可能导致截断的长文本
-    ST1["<b>[1] INGESTION</b>"]
-    ST2["<b>[2] PIPELINE</b>"]
-    ST3{"<b>[3] SPLIT</b>"}
+    %% ==================== 用大量的不换行空格强行撑大方块规模 ====================
+    ST1["&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>[1] INGESTION</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"]
+    ST2["&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>[2] PIPELINE</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"]
+    ST3{"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>[3] SPLIT</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"}
     
-    M_LR["<b>[4a] LR Model</b>"]
-    M_DT["<b>[4b] DT Model</b>"]
-    M_RF["<b>[4c] RF Model</b>"]
+    M_LR["&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>[4a] LR Model</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"]
+    M_DT["&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>[4b] DT Model</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"]
+    M_RF["&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>[4c] RF Model</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"]
     
-    ST5["<b>[5] CROSS VALIDATION</b>"]
-    ST6["<b>[6] TEST EVAL</b>"]
-    ST7["<b>[7] FINAL METRICS</b>"]
+    ST5["&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>[5] CROSS VALIDATION</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"]
+    ST6["&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>[6] TEST EVAL</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"]
+    ST7["&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>[7] FINAL METRICS</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"]
 
-    %% 逻辑与数据流向连线：将所有关键信息全部写在连线上（连线在任何渲染器下都不会被截断）
+    %% ==================== 数据流逻辑连线 ====================
     ST1 -- "UCI IRIS Dataset ➔ Pandas ➔ Spark DF (150 rows)" --> ST2
     ST2 -- "StringIndexer & VectorAssembler ➔ 'features' Vector" --> ST3
     
@@ -226,13 +226,13 @@ graph TD
     %% 导出最终完全一致的指标结果
     ST6 -- "Empirical Ceiling (35 / 38 Correct)" --> ST7
 
-    %% 注释面板：直接在图下方提供无损的纯文本细节映射，确保评审老师看得一清二楚
+    %% 注释面板
     subgraph DETAILS [" 💡 WORKFLOW METADATA DETAILS (100% VISIBLE) "]
         D1["<b>[1] Data</b>: 4 Continuous Physical Features ➔ Sepal/Petal Dimensions.<br/><b>[2] Stages</b>: Converts labels to [0.0, 1.0, 2.0] & Merges features into Dense Vector.<br/><b>[3] Stratified Split</b>: Deterministic partitioning via Fixed Random Seed = 42.<br/><b>[4] Grid Search</b>: LR (regParam=[0.01, 0.1, 1.0]) | DT (maxDepth=[3,5,7]) | RF (numTrees=[10,20,50]).<br/><b>[5] Method</b>: Distributed CrossValidator leveraging 3-Fold Evaluation optimized on F1-Score.<br/><b>[7] Results</b>: All models tied at Accuracy: 0.9211 | F1: 0.9224 | Precision: 0.9447 | Recall: 0.9211."]
     end
 
-    %% 极简高兼容全局基础样式
-    classDef default fill:#FFFFFF,stroke:#4A5568,stroke-width:1.5px,font-family:sans-serif,font-size:12px;
+    %% 全局样式：强制设定大边距与字体
+    classDef default fill:#FFFFFF,stroke:#4A5568,stroke-width:1.5px,font-family:sans-serif,font-size:12px,margin-left:20px,margin-right:20px;
     classDef highlight fill:#F7FAFC,stroke:#3182CE,stroke-width:2px;
     class ST3 highlight;
     class DETAILS fill:#FFF5F5,stroke:#E53E3E,stroke-width:1px;
