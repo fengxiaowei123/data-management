@@ -190,3 +190,33 @@ Logistic Regression is a parametric linear model assuming a flat, rigid decision
 Decision Tree is highly sensitive to minor variations in the training dataset, suffering from high variance. This makes standalone tree models structurally unstable on different data splits.
 
 Random Forest utilises a Bagging mechanism to ensemble 10 decorrelated subtrees. By aggregating predictions, it drastically minimises the overall model variance. Furthermore, the optimal parameters chosen via our grid search (numTrees=10, maxDepth=5) act as effective implicit pruning and regularisation. Thus, Random Forest provides far superior robustness and generalisation safety.
+
+```mermaid
+graph TD
+    %% 全局样式定义
+    classDef default fill:#F8F9FA,stroke:#CBD5E0,stroke-width:2px,font-family:sans-serif;
+    classDef core fill:#EBF8FF,stroke:#3182CE,stroke-width:2px;
+    classDef tune fill:#E6FFFA,stroke:#319795,stroke-width:2px;
+    classDef out fill:#FFF5F5,stroke:#E53E3E,stroke-width:2px;
+    classDef fin fill:#FFFAF0,stroke:#DD6B20,stroke-width:2px;
+
+    %% 节点定义
+    STEP1["<b>1. Data Ingestion & Schema Definition</b><br/>Online Ingestion (UCI ML Repository) ➔ Pandas ➔ Spark DataFrame"]:::core
+    
+    STEP2["<b>2. Spark ML Feature Engineering</b><br/>• [Text Labels] ➔ StringIndexer ➔ [Numeric Index 0.0/1.0/2.0]<br/>• [Raw Features] ➔ VectorAssembler ➔ [Dense Vector 'features']"]:::core
+    
+    STEP3{"<b>3. Dataset Partitioning</b><br/>Deterministic Split (seed=42)"}:::tune
+    
+    STEP4A["<b>4a. Parallel Grid Tuning & Evaluation</b><br/>• ParamGridBuilder (Hyperparameter Grid)<br/>• CrossValidator (3-fold Cross Validation)<br/>• MulticlassClassificationEvaluator"]:::tune
+    
+    STEP4B["<b>4b. Out-of-Sample Test Pool</b><br/>Unseen Evaluator Validation"]:::out
+    
+    STEP5["<b>5. Metrics & Visualization</b><br/>Compute & print Accuracy, F1-Score, Precision, and Recall"]:::fin
+
+    %% 逻辑流向连接
+    STEP1 --> STEP2
+    STEP2 --> STEP3
+    STEP3 -- "75% Training Stream" --> STEP4A
+    STEP3 -- "25% Testing Stream" --> STEP4B
+    STEP4A --> STEP5
+    STEP4B --> STEP5
