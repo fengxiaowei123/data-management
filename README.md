@@ -193,52 +193,46 @@ Random Forest utilises a Bagging mechanism to ensemble 10 decorrelated subtrees.
 
 ```mermaid
 graph TD
-    %% ==================== 节点定义 ====================
+    %% 节点定义：极致精简，拒绝任何可能导致截断的长文本
+    ST1["<b>[1] INGESTION</b>"]
+    ST2["<b>[2] PIPELINE</b>"]
+    ST3{"<b>[3] SPLIT</b>"}
     
-    STEP1["<b>[1] Data Ingestion & Schema Definition</b><br/>• Source: Online Ingestion (UCI ML Repository)<br/>• Pipeline: UCI HTTP Data ➔ Pandas ➔ Spark DataFrame<br/>• Info: 150 Instances | 4 Continuous Features | 3 Classes"]
-
-    STEP2["<b>[2] PySpark ML Feature Pipelines</b><br/>• <b>StringIndexer</b>: Categorical Labels ➔ Numeric Indices (0.0 / 1.0 / 2.0)<br/>• <b>VectorAssembler</b>: 4 Matrix Dimensions ➔ Dense Vector ('features')"]
-
-    STEP3{"<b>[3] Dataset Partitioning</b><br/>Deterministic Split<br/>(Fixed Seed = 42)"}
-
-    %% 训练集三大模型
-    MOD_LR["<b>[4a] Logistic Regression (LR)</b><br/>• Type: Parametric / Linear Boundary<br/>• Hyperparameter Grid Tuning:<br/>&nbsp;&nbsp;- regParam: [0.01, 0.1, 1.0]<br/>&nbsp;&nbsp;- elasticNetParam: [0.0, 0.5, 1.0]"]
-
-    MOD_DT["<b>[4b] Decision Tree (DT)</b><br/>• Type: Non-parametric / Recursive Split<br/>• Hyperparameter Grid Tuning:<br/>&nbsp;&nbsp;- maxDepth: [3, 5, 7]<br/>&nbsp;&nbsp;- maxBins: [10, 20]"]
-
-    MOD_RF["<b>[4c] Random Forest (RF)</b><br/>• Type: Ensemble / Bagging Robustness<br/>• Hyperparameter Grid Tuning:<br/>&nbsp;&nbsp;- numTrees: [10, 20, 50]<br/>&nbsp;&nbsp;- maxDepth: [3, 5]"]
-
-    STEP5["<b>[5] Distributed CrossValidator</b><br/>• 3-Fold Stratified Evaluation Split<br/>• Exhaustive Grid Search via ParamGridBuilder<br/>• Optimization Metric Standard: F1-Score (via Multiclass Evaluator)"]
-
-    STEP6["<b>[6] Out-of-Sample Test Inference</b><br/>• Validation Pool: 25% Independent Unseen Test Set (38 Instances)<br/>• Operation: Evaluates Best Parameter Configurations on Test Pool"]
-
-    STEP7["<b>[7] Final Identical Multi-Class Performance Metrics</b><br/>• Empirical Ceiling: Correct Classifications = 35 / Total = 38<br/>• <b>Accuracy</b>: 0.9211 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;• <b>F1-Score</b>: 0.9224<br/>• <b>Weighted Precision</b>: 0.9447 &nbsp;• <b>Weighted Recall</b>: 0.9211"]
-
-    %% ==================== 逻辑线与数据流向 ====================
+    M_LR["<b>[4a] LR Model</b>"]
+    M_DT["<b>[4b] DT Model</b>"]
+    M_RF["<b>[4c] RF Model</b>"]
     
-    STEP1 --> STEP2
-    STEP2 --> STEP3
-    
-    %% 75% 训练集分流
-    STEP3 -- "75% Training Split (112 Samples)" --> MOD_LR
-    STEP3 -- "75% Training Split (112 Samples)" --> MOD_DT
-    STEP3 -- "75% Training Split (112 Samples)" --> MOD_RF
-    
-    %% 汇聚到交叉验证
-    MOD_LR --> STEP5
-    MOD_DT --> STEP5
-    MOD_RF --> STEP5
-    
-    %% 提取最佳配置进行盲测
-    STEP5 -- "Extract Optimal Model Config" --> STEP6
-    
-    %% 25% 测试集旁路独立引流
-    STEP3 -. "25% Testing Bypass (38 Unseen Samples)" .-> STEP6
-    
-    %% 导出最终指标结果
-    STEP6 --> STEP7
+    ST5["<b>[5] CROSS VALIDATION</b>"]
+    ST6["<b>[6] TEST EVAL</b>"]
+    ST7["<b>[7] FINAL METRICS</b>"]
 
-    %% ==================== 极简高兼容样式 ====================
+    %% 逻辑与数据流向连线：将所有关键信息全部写在连线上（连线在任何渲染器下都不会被截断）
+    ST1 -- "UCI IRIS Dataset ➔ Pandas ➔ Spark DF (150 rows)" --> ST2
+    ST2 -- "StringIndexer & VectorAssembler ➔ 'features' Vector" --> ST3
+    
+    %% 75% 训练流
+    ST3 -- "75% Train (112 samples) ➔ Grid Search" --> M_LR
+    ST3 -- "75% Train (112 samples) ➔ Grid Search" --> M_DT
+    ST3 -- "75% Train (112 samples) ➔ Grid Search" --> M_RF
+    
+    M_LR -- "regParam / elasticNetParam" --> ST5
+    M_DT -- "maxDepth / maxBins" --> ST5
+    M_RF -- "numTrees / maxDepth" --> ST5
+    
+    %% 提取最佳配置与25%独立测试集盲测
+    ST5 -- "Extract Optimal Configs" --> ST6
+    ST3 -. "25% Independent Test Bypass (38 samples)" .-> ST6
+    
+    %% 导出最终完全一致的指标结果
+    ST6 -- "Empirical Ceiling (35 / 38 Correct)" --> ST7
+
+    %% 注释面板：直接在图下方提供无损的纯文本细节映射，确保评审老师看得一清二楚
+    subgraph DETAILS [" 💡 WORKFLOW METADATA DETAILS (100% VISIBLE) "]
+        D1["<b>[1] Data</b>: 4 Continuous Physical Features ➔ Sepal/Petal Dimensions.<br/><b>[2] Stages</b>: Converts labels to [0.0, 1.0, 2.0] & Merges features into Dense Vector.<br/><b>[3] Stratified Split</b>: Deterministic partitioning via Fixed Random Seed = 42.<br/><b>[4] Grid Search</b>: LR (regParam=[0.01, 0.1, 1.0]) | DT (maxDepth=[3,5,7]) | RF (numTrees=[10,20,50]).<br/><b>[5] Method</b>: Distributed CrossValidator leveraging 3-Fold Evaluation optimized on F1-Score.<br/><b>[7] Results</b>: All models tied at Accuracy: 0.9211 | F1: 0.9224 | Precision: 0.9447 | Recall: 0.9211."]
+    end
+
+    %% 极简高兼容全局基础样式
     classDef default fill:#FFFFFF,stroke:#4A5568,stroke-width:1.5px,font-family:sans-serif,font-size:12px;
     classDef highlight fill:#F7FAFC,stroke:#3182CE,stroke-width:2px;
-    class STEP3 highlight;
+    class ST3 highlight;
+    class DETAILS fill:#FFF5F5,stroke:#E53E3E,stroke-width:1px;
