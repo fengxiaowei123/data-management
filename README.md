@@ -193,30 +193,63 @@ Random Forest utilises a Bagging mechanism to ensemble 10 decorrelated subtrees.
 
 ```mermaid
 graph TD
-    %% 全局样式定义
-    classDef default fill:#F8F9FA,stroke:#CBD5E0,stroke-width:2px,font-family:sans-serif;
+    %% 全局色彩与样式美化
+    classDef default fill:#F8F9FA,stroke:#CBD5E0,stroke-width:2px,font-family:sans-serif,font-size:13px;
     classDef core fill:#EBF8FF,stroke:#3182CE,stroke-width:2px;
-    classDef tune fill:#E6FFFA,stroke:#319795,stroke-width:2px;
-    classDef out fill:#FFF5F5,stroke:#E53E3E,stroke-width:2px;
-    classDef fin fill:#FFFAF0,stroke:#DD6B20,stroke-width:2px;
+    classDef split fill:#E6FFFA,stroke:#319795,stroke-width:2px;
+    classDef model fill:#F7FAFC,stroke:#4A5568,stroke-width:1.5px;
+    classDef tune fill:#F5E6FF,stroke:#805AD5,stroke-width:2px;
+    classDef out fill:#FFF5F5,stroke:#E53E3E,stroke-width:1.5px;
+    classDef metric fill:#FFFAF0,stroke:#DD6B20,stroke-width:2px;
 
-    %% 节点定义
-    STEP1["<b>1. Data Ingestion & Schema Definition</b><br/>Online Ingestion (UCI ML Repository) ➔ Pandas ➔ Spark DataFrame"]:::core
+    %% 1. 数据摄入
+    STEP1["<b>1. Data Ingestion & Schema Definition</b><br/>Online Ingestion (UCI ML Repository) ➔ Pandas ➔ PySpark DataFrame<br/><i>(150 instances | 4 continuous features | 3 classes)</i>"]:::core
     
-    STEP2["<b>2. Spark ML Feature Engineering</b><br/>• [Text Labels] ➔ StringIndexer ➔ [Numeric Index 0.0/1.0/2.0]<br/>• [Raw Features] ➔ VectorAssembler ➔ [Dense Vector 'features']"]:::core
+    %% 2. 特征工程
+    STEP2["<b>2. PySpark ML Feature Pipelines</b><br/>• <b>StringIndexer</b>: Categorical labels ➔ Numeric indices [0.0, 1.0, 2.0]<br/>• <b>VectorAssembler</b>: 4 features ➔ Dense Vector <b>'features'</b>"]:::core
     
-    STEP3{"<b>3. Dataset Partitioning</b><br/>Deterministic Split (seed=42)"}:::tune
+    %% 3. 数据集切分
+    STEP3{"<b>3. Dataset Partitioning</b><br/>Stratified Split (seed=42)"}:::split
     
-    STEP4A["<b>4a. Parallel Grid Tuning & Evaluation</b><br/>• ParamGridBuilder (Hyperparameter Grid)<br/>• CrossValidator (3-fold Cross Validation)<br/>• MulticlassClassificationEvaluator"]:::tune
-    
-    STEP4B["<b>4b. Out-of-Sample Test Pool</b><br/>Unseen Evaluator Validation"]:::out
-    
-    STEP5["<b>5. Metrics & Visualization</b><br/>Compute & print Accuracy, F1-Score, Precision, and Recall"]:::fin
+    %% 4. 三大模型并行训练分支
+    subgraph MODELS [" 4. Parallel Estimators Training Pool (75% Train Split: 112 Samples) "]
+        fill:#F7FAFC
+        stroke:#CBD5E0
+        LR["<b>Logistic Regression (LR)</b><br/>• regParam: [0.01, 0.1, 1.0]<br/>• elasticNetParam: [0.0, 0.5, 1.0]"]:::model
+        DT["<b>Decision Tree (DT)</b><br/>• maxDepth: [3, 5, 7]<br/>• maxBins: [10, 20]"]:::model
+        RF["<b>Random Forest (RF)</b><br/>• numTrees: [10, 20, 50]<br/>• maxDepth: [3, 5]"]:::model
+    end
 
-    %% 逻辑流向连接
+    %% 5. 分布式交叉验证
+    STEP5["<b>5. Distributed CrossValidator</b><br/>• 3-Fold Stratified Cross-Validation<br/>• Grid Search Grid Tuning via ParamGridBuilder<br/>• Evaluator: MulticlassClassificationEvaluator (Optimize: F1-Score)"]:::tune
+
+    %% 6. 测试集盲测
+    STEP6["<b>6. Out-of-Sample Test Inference</b><br/>Apply Best Optimized Parameters to Unseen Partition<br/><i>(25% Test Split: 38 Samples)</i>"]:::out
+
+    %% 7. 最终完全一致的评估成果
+    subgraph METRICS [" 7. Final Identical Multi-Class Evaluation Metrics (Correct: 35 / 38) "]
+        M1["<b>Accuracy</b><br/>0.9211"]:::metric
+        M2["<b>F1-Score</b><br/>0.9224"]:::metric
+        M3["<b>Weighted Precision</b><br/>0.9447"]:::metric
+        M4["<b>Weighted Recall</b><br/>0.9211"]:::metric
+    end
+
+    %% 流程连接关系拓扑
     STEP1 --> STEP2
     STEP2 --> STEP3
-    STEP3 -- "75% Training Stream" --> STEP4A
-    STEP3 -- "25% Testing Stream" --> STEP4B
-    STEP4A --> STEP5
-    STEP4B --> STEP5
+    
+    STEP3 -- "75% Data Stream" --> LR
+    STEP3 -- "75% Data Stream" --> DT
+    STEP3 -- "75% Data Stream" --> RF
+    
+    LR --> STEP5
+    DT --> STEP5
+    RF --> STEP5
+    
+    STEP5 -- "Extract Best Models Config" --> STEP6
+    STEP3 -. "25% Independent Bypass" .-> STEP6
+    
+    STEP6 --> M1
+    STEP6 --> M2
+    STEP6 --> M3
+    STEP6 --> M4
