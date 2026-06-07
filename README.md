@@ -9,7 +9,7 @@ Apache Spark operates on a lazy-evaluation paradigm; thus, our implementation fo
 ---
 
 ###  1. Data Ingestion & Schema Definition
-* **Data Source** `➔` UCI Machine Learning Repository (Online HTTP Request)
+* **Data Source** `➔` UCI Machine Learning Repository 
 * **Internal Transfer** `➔` Python Pandas DataFrame
 * **Target Engine** `➔` Programmatically converted into a distributed **PySpark DataFrame** with an explicitly enforced schema.
 
