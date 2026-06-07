@@ -242,3 +242,20 @@ Apache Spark operates on a lazy-evaluation paradigm; thus, our implementation fo
 | **Weighted Recall** | `0.9211` | Perfectly tracks raw accuracy due to zero skewness. |
 
 ---
+## 📌 Workflow
+
+Apache Spark operates on a lazy-evaluation paradigm; thus, our implementation focuses on constructing an end-to-end Machine Learning Pipeline. The data flow of this project is illustrated below:
+
+* **Data Ingestion & Schema Definition**
+    * Online ingestion from UCI ML Repository -> Pandas -> Spark DataFrame
+* **Spark ML Feature Engineering**
+    * **[Text Labels]** `--->` StringIndexer `--->` **[Numeric Index 0.0/1.0/2.0]**
+    * **[Raw Features]** `--->` VectorAssembler `--->` **[Dense Vector "features"]**
+* **Dataset Partitioning**
+    * **75% Training Split** `➔` Parallel Grid Tuning & Evaluation
+        * ParamGridBuilder (Hyperparameter Grid)
+        * CrossValidator (3-fold Cross Validation)
+        * MulticlassClassificationEvaluator
+    * **25% Testing Split** `➔` Out-of-Sample Test Predictions
+* **Metrics & Visualization**
+    * Compute & print Accuracy, F1-Score, Precision, and Recall
