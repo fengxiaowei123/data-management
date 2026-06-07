@@ -2,7 +2,7 @@
 
 ## This repository contains the first assignment for the STQD6324 Data Management course at the National University of Malaysia (UKM). The project implements a distributed feature engineering and classification pipeline using PySpark MLlib on the classic Iris dataset, comparing the performance of three different algorithms after hyperparameter tuning.
 
-##  Workflow Pipeline
+##  Workflow 
 
 Apache Spark operates on a lazy-evaluation paradigm; thus, our implementation focuses on constructing an end-to-end Machine Learning Pipeline. The end-to-end distributed data flow is structured as follows:
 
