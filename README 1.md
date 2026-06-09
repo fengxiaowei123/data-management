@@ -9,18 +9,18 @@ Apache Spark operates on a lazy-evaluation paradigm; thus, our implementation fo
 ---
 
 ###  1. Data Ingestion & Schema Definition
-* **Data Source** `➔` UCI Machine Learning Repository 
-* **Internal Transfer** `➔` Python Pandas DataFrame
-* **Target Engine** `➔` Programmatically converted into a distributed **PySpark DataFrame** with an explicitly enforced schema.
+* **Data Source** ： UCI Machine Learning Repository 
+* **Internal Transfer** ： Python Pandas DataFrame
+* **Target Engine** ： Programmatically converted into a distributed **PySpark DataFrame** with an explicitly enforced schema.
 
 ###  2. Distributed Feature Engineering
-* **Categorical Encoding** `➔` `StringIndexer` converts text labels (e.g., Iris-setosa) into numerical class indices `[0.0, 1.0, 2.0]`.
-* **Vector Assembly** `➔` `VectorAssembler` merges the 4 physical feature dimensions into a single multi-dimensional dense vector named `"features"` *(a strict prerequisite for Spark MLlib algorithm training)*.
+* **Categorical Encoding** ： `StringIndexer` converts text labels (e.g., Iris-setosa) into numerical class indices `[0.0, 1.0, 2.0]`.
+* **Vector Assembly** ： `VectorAssembler` merges the 4 physical feature dimensions into a single multi-dimensional dense vector named `"features"` *(a strict prerequisite for Spark MLlib algorithm training)*.
 
 ###  3. Dataset Partitioning 
-* **Configuration** `➔` Deterministic stratified random split using a fixed seed (`seed=42`).
-* **Training Stream [75%]** `➔` **112 Samples** routed directly to the Parallel Hyperparameter Tuning Loop.
-* **Testing Stream [25%]** `➔` **38 Samples** completely isolated and held out as a clean environment for out-of-sample validation.
+* **Configuration** ： Deterministic stratified random split using a fixed seed (`seed=42`).
+* **Training Stream [75%]** ： **112 Samples** routed directly to the Parallel Hyperparameter Tuning Loop.
+* **Testing Stream [25%]** ： **38 Samples** completely isolated and held out as a clean environment for out-of-sample validation.
 
 ---
 
@@ -37,8 +37,8 @@ Apache Spark operates on a lazy-evaluation paradigm; thus, our implementation fo
 ---
 
 ###  5. Out-of-Sample Inference & Blind Test
-* **Execution** `➔` The best model configurations locked from the Cross-Validation phase are extracted and applied to perform predictions on the untouched 25% test partition (**38 instances**).
-* **Evaluation** `➔` Evaluated via `MulticlassClassificationEvaluator`.
+* **Execution** ： The best model configurations locked from the Cross-Validation phase are extracted and applied to perform predictions on the untouched 25% test partition (**38 instances**).
+* **Evaluation** ： Evaluated via `MulticlassClassificationEvaluator`.
 
 ###  6. Final Performance Benchmarks & Convergence
 *Due to the mathematical constraints of the borderline overlapping spaces between Versicolor and Virginica, all three classifiers reached an identical empirical performance ceiling of **35 / 38 correct classifications**:*
@@ -49,5 +49,3 @@ Apache Spark operates on a lazy-evaluation paradigm; thus, our implementation fo
 | **F1-Score** | `0.9224` | High alignment confirms full class-balance safety. |
 | **Weighted Precision** | `0.9447` | Confirms exceptionally low false-positive rates. |
 | **Weighted Recall** | `0.9211` | Perfectly tracks raw accuracy due to zero skewness. |
-
-
